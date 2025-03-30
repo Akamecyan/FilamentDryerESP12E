@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filament Dryer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Filament Dryer Control</h1>
+      <p class="subtitle">Monitor and control your filament drying process</p>
+    </header>
+    
+    <div class="status-panel">
+      <div class="status-card">
+        <h2>Current Temperature</h2>
+        <div class="value" id="current-temp">--</div>
+        <div class="unit">°C</div>
+      </div>
+      <div class="status-card">
+        <h2>Current Humidity</h2>
+        <div class="value" id="current-humidity">--</div>
+        <div class="unit">%</div>
+      </div>
+      <div class="status-card">
+        <h2>Target Temperature</h2>
+        <div class="value" id="target-temp">--</div>
+        <div class="unit">°C</div>
+      </div>
+      <div class="status-card">
+        <h2>Heater Power</h2>
+        <div class="value" id="heater-power">--</div>
+        <div class="unit">%</div>
+      </div>
+    </div>
+    
+    <div class="charts-container">
+      <div class="chart-wrapper">
+        <canvas id="temperature-chart"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="humidity-chart"></canvas>
+      </div>
+    </div>
+    
+    <div class="control-panel">
+      <div class="profile-section">
+        <h2>Filament Profiles</h2>
+        <div class="profiles-list" id="profiles-list">
+          <!-- Profiles will be loaded dynamically -->
+          <div class="loading">Loading profiles...</div>
+        </div>
+      </div>
+      
+      <div class="manual-control">
+        <h2>Manual Control</h2>
+        <div class="temperature-control">
+          <label for="manual-temp">Temperature (°C):</label>
+          <input type="number" id="manual-temp" min="30" max="80" value="50">
+          <button id="set-temp-btn">Set Temperature</button>
+        </div>
+        <button id="stop-btn" class="stop-btn">Stop Heating</button>
+      </div>
+    </div>
+    
+    <div class="timer-panel" id="timer-panel">
+      <h2>Drying Progress</h2>
+      <div class="timer" id="remaining-time">--:--:--</div>
+      <div class="progress-bar">
+        <div class="progress" id="progress-bar"></div>
+      </div>
+    </div>
+    
+    <div class="debug-section">
+      <button id="toggle-debug" class="debug-toggle">Show Debug Info</button>
+      <div id="debug-info" class="debug-info">
+        <h3>Debug Information</h3>
+        <div id="debug-content">No debug information available</div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>Filament Dryer Controller v1.0</p>
+      <div id="connection-status" class="connection-status">Connecting...</div>
+    </footer>
+  </div>
+  
+  <script>
+    // Check if the page loaded correctly
+    console.log('HTML document loaded');
+    console.log('Current host:', window.location.host);
+    // Add a connection status indicator
+    window.addEventListener('load', function() {
+      console.log('Window loaded');
+      const connectionStatus = document.getElementById('connection-status');
+      if (connectionStatus) {
+        connectionStatus.textContent = 'Page loaded, connecting to device...';
+      }
+      
+      // Set up debug toggle
+      const toggleDebug = document.getElementById('toggle-debug');
+      const debugInfo = document.getElementById('debug-info');
+      
+      if (toggleDebug && debugInfo) {
+        toggleDebug.addEventListener('click', function() {
+          if (debugInfo.classList.contains('visible')) {
+            debugInfo.classList.remove('visible');
+            toggleDebug.textContent = 'Show Debug Info';
+          } else {
+            // Fetch and display debug info
+            Promise.all([
+              fetch('/debug/status').then(r => r.json()).catch(() => 'Failed to load status'),
+              fetch('/debug/profiles').then(r => r.json()).catch(() => 'Failed to load profiles')
+            ]).then(([status, profiles]) => {
+              document.getElementById('debug-content').innerHTML = 
+                '<h4>Status:</h4><pre>' + JSON.stringify(status, null, 2) + '</pre>' +
+                '<h4>Profiles:</h4><pre>' + JSON.stringify(profiles, null, 2) + '</pre>';
+            });
+            
+            debugInfo.classList.add('visible');
+            toggleDebug.textContent = 'Hide Debug Info';
+          }
+        });
+      }
+    });
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
+
